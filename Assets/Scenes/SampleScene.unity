@@ -155,11 +155,15 @@ MonoBehaviour:
   finaloutputs: []
   xpos: 
   ypos: 
+  testoutputin: 0
+  testoutputp: 0
+  testx: 0
+  testy: 0
   poisonous: 
   AverageError: 0
   Point: {fileID: 1834145445}
   output: 0
-  trainingpoints: 200
+  trainingpoints: 400
 --- !u!4 &542367716
 Transform:
   m_ObjectHideFlags: 0

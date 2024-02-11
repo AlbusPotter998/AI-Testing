@@ -19,7 +19,8 @@ public class NeuralNetwork : MonoBehaviour
             {
                 activation += (inputs[i] * weights[i]) + biases[i];
             }
-            return 1 / (1 + Math.Exp(-1 * activation));
+            return (Math.Exp(activation) - Math.Exp(-1 * activation)) / (Math.Exp(activation) + Math.Exp(-1 * activation));
+            // return 1 / (1 + Math.Exp(-1 * activation));
         }
     }
     int layers = 5;
@@ -27,11 +28,15 @@ public class NeuralNetwork : MonoBehaviour
     public double[] finaloutputs;
     public int[] xpos;
     public int[] ypos;
+    public double testoutputin;
+    public double testoutputp;
+    public int testx;
+    public int testy;
     public bool[] poisonous;
     public double AverageError;
     public GameObject Point;
     public double output;
-    public int trainingpoints = 200;
+    public int trainingpoints = 400;
     double findOutput(double input)
     {
         return (input * input * input * input * input * input * input * 0.0000000000000013793) + (input * input * input * input * input * input * -0.0000000000022957) + (input * input * input * input * input * 0.0000000012496) + (input * input * input * input * -0.00000022673 + 539);
@@ -81,10 +86,6 @@ public class NeuralNetwork : MonoBehaviour
                     closetomidy = y;
                     closediff = diff;
                 }
-                else
-                {
-                    Debug.Log(diff);
-                }
 
             }
             GameObject clone = Instantiate(Point, new Vector3(x, closetomidy, 0), Quaternion.identity);
@@ -119,6 +120,10 @@ public class NeuralNetwork : MonoBehaviour
     {
         xpos = new int[trainingpoints];
         ypos = new int[trainingpoints];
+        testx = 0;
+        testy = 0;
+        testoutputin = 0;
+        testoutputp = 0;
         poisonous = new bool[trainingpoints];
         createTrainingPoints(trainingpoints);
         network = new Node[layers][];
@@ -147,7 +152,8 @@ public class NeuralNetwork : MonoBehaviour
         }
         
         Randomize();
-        TrainNetwork(5, 1);
+        
+        TrainNetwork(100, 0.03);
         /*
         for (int i = 0; i < 100; i++)
         {
@@ -157,8 +163,23 @@ public class NeuralNetwork : MonoBehaviour
             
         }
         */
-        Debug.Log(ErrorCalculation());
+        DebugNetwork();
         GraphNetwork();
+        
+    }
+    void DebugNetwork()
+    {
+        for(int i = 0; i<layers; i++)
+        {
+            for(int j = 0; j < network[i].Length; j++)
+            {
+                for (int k = 0; k < network[i][j].weights.Length; k++)
+                {
+                    Debug.Log("Layer " + i + " Node " + j + " Weight " + network[i][j].weights[k]);
+                    Debug.Log("Layer " + i + " Node " + j + " Bias " + network[i][j].biases[k]);
+                }
+            }
+        }
     }
     void TrainNetwork(int steps, double trainingrate)
     {
@@ -170,14 +191,41 @@ public class NeuralNetwork : MonoBehaviour
                 {
                     for (int l = 0; l < network[j][k].weights.Length; l++)
                     {
-                        double oldweight = network[j][k].weights[l];
-                        double oldbias = network[j][k].biases[l];
                         double minerror = ErrorCalculation();
-                        double minweight = -200;
-                        double minbias = -200;
-                        network[j][k].weights[l] = -100;
-                        network[j][k].biases[l] = -100;
-                        for (double m = -100; m <= 100; m += trainingrate)
+                        network[j][k].weights[l] += trainingrate;
+                        double poserror = ErrorCalculation();
+                        network[j][k].weights[l] -= trainingrate * 2;
+                        double negerror = ErrorCalculation();
+                        network[j][k].weights[l] += trainingrate;
+                        if (poserror < minerror && poserror < negerror)
+                        {
+                            network[j][k].weights[l] += trainingrate;
+                        }
+                        else if (negerror < minerror)
+                        {
+                            network[j][k].weights[l] -= trainingrate;
+                        }
+                        minerror = ErrorCalculation();
+                        network[j][k].biases[l] += trainingrate;
+                        poserror = ErrorCalculation();
+                        network[j][k].biases[l] -= trainingrate * 2;
+                        negerror = ErrorCalculation();
+                        network[j][k].biases[l] += trainingrate;
+                        if (poserror < minerror && poserror < negerror)
+                        {
+                            network[j][k].biases[l] += trainingrate;
+                        }
+                        else if (negerror < minerror)
+                        {
+                            network[j][k].biases[l] -= trainingrate;
+
+                        }
+
+                        /*
+                        network[j][k].weights[l] = -1;
+                        network[j][k].biases[l] = -1;
+                        
+                        for (double m = -1; m <= 1; m += trainingrate)
                         {
                             network[j][k].weights[l] = m;
                             double error = ErrorCalculation();
@@ -188,7 +236,7 @@ public class NeuralNetwork : MonoBehaviour
                             }
                             
                         }
-                        if(minweight == -200)
+                        if(minweight == -2)
                         {
                             network[j][k].weights[l] = oldweight;
                         }
@@ -199,7 +247,7 @@ public class NeuralNetwork : MonoBehaviour
                         
                         
                         minerror = ErrorCalculation();
-                        for(double m = -100; m <= 100; m += trainingrate)
+                        for(double m = -1; m <= 1; m += trainingrate)
                         {
                             network[j][k].biases[l] = m;
                             double error = ErrorCalculation();
@@ -210,7 +258,7 @@ public class NeuralNetwork : MonoBehaviour
                             }
                             
                         }
-                        if(minbias == -200)
+                        if(minbias == -2)
                         {
                             network[j][k].biases[l] = oldbias;
                         }
@@ -218,8 +266,9 @@ public class NeuralNetwork : MonoBehaviour
                         {
                             network[j][k].biases[l] = minbias;
                         }
-                        
-                        
+                        */
+
+
                     }
                     
                 }
@@ -235,8 +284,8 @@ public class NeuralNetwork : MonoBehaviour
             {
                 for(int k = 0; k < network[i][j].weights.Length; k++)
                 {
-                    network[i][j].weights[k] = -100;
-                    network[i][j].biases[k] = -100;
+                    network[i][j].weights[k] = (random.NextDouble() * 2) - 1;
+                    network[i][j].biases[k] = (random.NextDouble() * 2) - 1;
                 }
                 
             }
@@ -267,16 +316,19 @@ public class NeuralNetwork : MonoBehaviour
                 }
                 outputs[i][j] = network[i][j].findActivation(inputs, network[i][j].weights, network[i][j].biases);
             }
-            if(i == layers - 1)
-            {
-                outputs[i].CopyTo(finaloutputs, 0);
-            }
         }
+        outputs[layers - 1].CopyTo(finaloutputs, 0);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if(Input.GetKey("space")) 
+        {
+            RunNetwork(new double[] { testx, testy });
+            Debug.Log("Clicked");
+            testoutputin = finaloutputs[0];
+            testoutputp = finaloutputs[1];
+        }
     }
 }
