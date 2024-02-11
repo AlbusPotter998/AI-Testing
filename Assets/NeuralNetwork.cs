@@ -32,14 +32,14 @@ public class NeuralNetwork : MonoBehaviour
     public double testoutputp;
     public int testx;
     public int testy;
-    public bool[] poisonous;
+    public bool[] overcooked;
     public double AverageError;
     public GameObject Point;
     public double output;
     public int trainingpoints = 400;
     double findOutput(double input)
     {
-        return (input * input * input * input * input * input * input * 0.0000000000000013793) + (input * input * input * input * input * input * -0.0000000000022957) + (input * input * input * input * input * 0.0000000012496) + (input * input * input * input * -0.00000022673 + 539);
+        return (Math.Pow(input, 7) * 0.0000000000000013793) + (Math.Pow(input, 6) * -0.0000000000022957) + (Math.Pow(input, 5) * 0.0000000012496) + (Math.Pow(input, 4) * -0.00000022673 + 539);
     }
     void createTrainingPoints(int pointnum)
     {
@@ -52,12 +52,12 @@ public class NeuralNetwork : MonoBehaviour
             if (findOutput(x) > y)
             {
                 clone.GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
-                poisonous[i] = false;
+                overcooked[i] = false;
             }
             else
             {
                 clone.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
-                poisonous[i] = true;
+                overcooked[i] = true;
             }
 
             xpos[i] = x;
@@ -103,7 +103,7 @@ public class NeuralNetwork : MonoBehaviour
         {
             double[] errorinputs = new double[] { xpos[i], ypos[i] };
             RunNetwork(errorinputs);
-            if (poisonous[i] == true)
+            if (overcooked[i] == true)
             {
                 AverageError += Math.Abs(Math.Sqrt((finaloutputs[0] * finaloutputs[0]) + ((1 - finaloutputs[1]) * (1 - finaloutputs[1]))));
             }
@@ -125,7 +125,7 @@ public class NeuralNetwork : MonoBehaviour
         testy = 0;
         testoutputin = 0;
         testoutputp = 0;
-        poisonous = new bool[trainingpoints];
+        overcooked = new bool[trainingpoints];
         createTrainingPoints(trainingpoints);
         network = new Node[layers][];
         network[0] = new Node[2];
@@ -154,7 +154,7 @@ public class NeuralNetwork : MonoBehaviour
         
         Randomize();
         
-        TrainNetwork(100, 0.03);
+        TrainNetwork(100, 0.01);
 
         GraphNetwork();
         
