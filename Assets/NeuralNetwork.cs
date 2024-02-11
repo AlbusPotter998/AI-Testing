@@ -28,18 +28,21 @@ public class NeuralNetwork : MonoBehaviour
     public double[] finaloutputs;
     public int[] xpos;
     public int[] ypos;
+    public int[] zpos;
     public double testoutputin;
     public double testoutputp;
     public int testx;
     public int testy;
-    public bool[] poisonous;
+    public int testz;
+    public bool[] overcooked;
     public double AverageError;
     public GameObject Point;
     public double output;
-    public int trainingpoints = 400;
-    double findOutput(double input)
+    public int trainingpoints = 500;
+    double findOutput(double inputx, double inputy)
     {
-        return (input * input * input * input * input * input * input * 0.0000000000000013793) + (input * input * input * input * input * input * -0.0000000000022957) + (input * input * input * input * input * 0.0000000012496) + (input * input * input * input * -0.00000022673 + 539);
+        // return (input * input * input * input * input * input * input * 0.0000000000000013793) + (input * input * input * input * input * input * -0.0000000000022957) + (input * input * input * input * input * 0.0000000012496) + (input * input * input * input * -0.00000022673 + 539);
+        return (0.000000000000000001 * Math.Pow(inputx, 6)) + (0.000000000000000001 * Math.Pow(inputy, 6));
     }
     void createTrainingPoints(int pointnum)
     {
@@ -48,16 +51,17 @@ public class NeuralNetwork : MonoBehaviour
         {
             int x = random.Next(700);
             int y = random.Next(700);
+            int z = random.Next(700);
             GameObject clone = Instantiate(Point, new Vector3(x, y, 0), Quaternion.identity);
-            if (findOutput(x) > y)
+            if (findOutput(x, y) > z)
             {
                 clone.GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
-                poisonous[i] = false;
+                overcooked[i] = false;
             }
             else
             {
                 clone.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
-                poisonous[i] = true;
+                overcooked[i] = true;
             }
 
             xpos[i] = x;
@@ -70,26 +74,32 @@ public class NeuralNetwork : MonoBehaviour
         
         for (int x = 0; x < 800; x++)
         {
-            int closetomidy = -1;
-            double closediff = 2;
-            for (int y = 1; y < 1000; y++)
+            
+            for (int y = 0; y < 800; y++)
             {
-                double[] coordinates = new double[2];
-                coordinates[0] = x;
-                coordinates[1] = y;
-                RunNetwork(coordinates);
-                double probin = finaloutputs[0];
-                double probp = finaloutputs[1];
-                double diff = Math.Abs(Math.Sqrt((((0.5 - probin) * (0.5 - probin)) + ((0.5 - probp) * (0.5 - probp))) / 2));
-                if (diff < closediff)
+                int closetomidz = -1;
+                double closediff = 2;
+                for (int z = 0; z < 800; z++)
                 {
-                    closediff = diff;
-                    closetomidy = y;
-                }
 
+                    double[] coordinates = new double[3];
+                    coordinates[0] = x;
+                    coordinates[1] = y;
+                    coordinates[2] = z;
+                    RunNetwork(coordinates);
+                    double probin = finaloutputs[0];
+                    double probp = finaloutputs[1];
+                    double diff = Math.Abs(Math.Sqrt((((0.5 - probin) * (0.5 - probin)) + ((0.5 - probp) * (0.5 - probp))) / 2));
+                    if (diff < closediff)
+                    {
+                        closediff = diff;
+                        closetomidz = z;
+                    }
+                }
+                GameObject clone = Instantiate(Point, new Vector3(x, y, closetomidz), Quaternion.identity);
+                clone.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
             }
-            GameObject clone = Instantiate(Point, new Vector3(x, closetomidy, 0), Quaternion.identity);
-            clone.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+            
 
 
 
@@ -101,9 +111,9 @@ public class NeuralNetwork : MonoBehaviour
         AverageError = 0;
         for(int i = 0; i < trainingpoints; i++)
         {
-            double[] errorinputs = new double[] { xpos[i], ypos[i] };
+            double[] errorinputs = new double[] { xpos[i], ypos[i], zpos[i] };
             RunNetwork(errorinputs);
-            if (poisonous[i] == true)
+            if (overcooked[i] == true)
             {
                 AverageError += Math.Abs(Math.Sqrt((finaloutputs[0] * finaloutputs[0]) + ((1 - finaloutputs[1]) * (1 - finaloutputs[1]))));
             }
@@ -121,14 +131,16 @@ public class NeuralNetwork : MonoBehaviour
     {
         xpos = new int[trainingpoints];
         ypos = new int[trainingpoints];
+        zpos = new int[trainingpoints];
         testx = 0;
         testy = 0;
+        testz = 0;
         testoutputin = 0;
         testoutputp = 0;
-        poisonous = new bool[trainingpoints];
+        overcooked = new bool[trainingpoints];
         createTrainingPoints(trainingpoints);
         network = new Node[layers][];
-        network[0] = new Node[2];
+        network[0] = new Node[3];
         network[1] = new Node[6];
         network[2] = new Node[6];
         network[3] = new Node[6];
@@ -159,7 +171,20 @@ public class NeuralNetwork : MonoBehaviour
         GraphNetwork();
         
     }
-
+    void DebugNetwork()
+    {
+        for(int i = 0; i < layers; i++)
+        {
+            for(int j = 0; j  <= network[i].Length; j++)
+            {
+                for(int k = 0; k < network[i][j].weights.Length; k++)
+                {
+                    Debug.Log("Layer " + i + " Node " + j + " Weight " + k + ": " + network[i][j].weights[k]);
+                    Debug.Log("Layer " + i + " Node " + j + " Bias " + k + ": " + network[i][j].biases[k]);
+                }
+            }
+        }
+    }
     void TrainNetwork(int steps, double trainingrate)
     {
         for(int i = 0; i < steps; i++)
@@ -257,7 +282,7 @@ public class NeuralNetwork : MonoBehaviour
     {
         if(Input.GetKey("space")) 
         {
-            RunNetwork(new double[] { testx, testy });
+            RunNetwork(new double[] { testx, testy, testz });
             testoutputin = finaloutputs[0];
             testoutputp = finaloutputs[1];
         }
