@@ -80,16 +80,17 @@ public class NeuralNetwork : MonoBehaviour
                 RunNetwork(coordinates);
                 double probin = finaloutputs[0];
                 double probp = finaloutputs[1];
-                double diff = Math.Abs(Math.Sqrt(((0.5 - probin) * (0.5 - probin)) + ((0.5 - probp) * (0.5 - probp))));
+                double diff = Math.Abs(Math.Sqrt((((0.5 - probin) * (0.5 - probin)) + ((0.5 - probp) * (0.5 - probp))) / 2));
                 if (diff < closediff)
                 {
-                    closetomidy = y;
                     closediff = diff;
+                    closetomidy = y;
                 }
 
             }
             GameObject clone = Instantiate(Point, new Vector3(x, closetomidy, 0), Quaternion.identity);
             clone.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+
 
 
         }
@@ -128,9 +129,9 @@ public class NeuralNetwork : MonoBehaviour
         createTrainingPoints(trainingpoints);
         network = new Node[layers][];
         network[0] = new Node[2];
-        network[1] = new Node[5];
-        network[2] = new Node[5];
-        network[3] = new Node[5];
+        network[1] = new Node[6];
+        network[2] = new Node[6];
+        network[3] = new Node[6];
         network[4] = new Node[2];
         finaloutputs = new double[network[network.Length - 1].Length];
         for(int i = 0; i < layers; i++)
@@ -154,33 +155,11 @@ public class NeuralNetwork : MonoBehaviour
         Randomize();
         
         TrainNetwork(100, 0.03);
-        /*
-        for (int i = 0; i < 100; i++)
-        {
-            var random = new System.Random();
-            double[] input = new double[] { random.Next(600), random.Next(1000) };
-            RunNetwork(input);
-            
-        }
-        */
-        DebugNetwork();
+
         GraphNetwork();
         
     }
-    void DebugNetwork()
-    {
-        for(int i = 0; i<layers; i++)
-        {
-            for(int j = 0; j < network[i].Length; j++)
-            {
-                for (int k = 0; k < network[i][j].weights.Length; k++)
-                {
-                    Debug.Log("Layer " + i + " Node " + j + " Weight " + network[i][j].weights[k]);
-                    Debug.Log("Layer " + i + " Node " + j + " Bias " + network[i][j].biases[k]);
-                }
-            }
-        }
-    }
+
     void TrainNetwork(int steps, double trainingrate)
     {
         for(int i = 0; i < steps; i++)
@@ -221,54 +200,7 @@ public class NeuralNetwork : MonoBehaviour
 
                         }
 
-                        /*
-                        network[j][k].weights[l] = -1;
-                        network[j][k].biases[l] = -1;
                         
-                        for (double m = -1; m <= 1; m += trainingrate)
-                        {
-                            network[j][k].weights[l] = m;
-                            double error = ErrorCalculation();
-                            if(error < minerror)
-                            {
-                                minerror = error;
-                                minweight = m;
-                            }
-                            
-                        }
-                        if(minweight == -2)
-                        {
-                            network[j][k].weights[l] = oldweight;
-                        }
-                        else
-                        {
-                            network[j][k].weights[l] = minweight;
-                        }
-                        
-                        
-                        minerror = ErrorCalculation();
-                        for(double m = -1; m <= 1; m += trainingrate)
-                        {
-                            network[j][k].biases[l] = m;
-                            double error = ErrorCalculation();
-                            if(error < minerror)
-                            {
-                                minerror = error;
-                                minbias = m;
-                            }
-                            
-                        }
-                        if(minbias == -2)
-                        {
-                            network[j][k].biases[l] = oldbias;
-                        }
-                        else
-                        {
-                            network[j][k].biases[l] = minbias;
-                        }
-                        */
-
-
                     }
                     
                 }
@@ -326,7 +258,6 @@ public class NeuralNetwork : MonoBehaviour
         if(Input.GetKey("space")) 
         {
             RunNetwork(new double[] { testx, testy });
-            Debug.Log("Clicked");
             testoutputin = finaloutputs[0];
             testoutputp = finaloutputs[1];
         }
