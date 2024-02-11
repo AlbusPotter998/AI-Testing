@@ -159,11 +159,11 @@ MonoBehaviour:
   testoutputp: 0
   testx: 0
   testy: 0
-  poisonous: 
+  overcooked: 
   AverageError: 0
   Point: {fileID: 1834145445}
   output: 0
-  trainingpoints: 400
+  trainingpoints: 500
 --- !u!4 &542367716
 Transform:
   m_ObjectHideFlags: 0
